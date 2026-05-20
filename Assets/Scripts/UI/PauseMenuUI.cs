@@ -3,16 +3,18 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
 
-// Attacher ce script au GameObject racine du panneau Pause.
-// Dans l'Inspector, glisser-déposer les boutons dans les champs correspondants.
+// Ce script doit être sur un GameObject TOUJOURS ACTIF (ex: un parent du Canvas pause).
+// Assigner le Canvas/Panel visuel dans pausePanel — c'est lui qui sera affiché/caché.
 public class PauseMenuUI : MonoBehaviour
 {
+    [Header("Panel visuel du menu pause (à afficher/cacher)")]
+    [SerializeField] private GameObject pausePanel;
+
     [Header("Boutons du menu pause")]
     [SerializeField] private Button resumeButton;
     [SerializeField] private Button mainMenuButton;
     [SerializeField] private Button quitButton;
 
-    // Suivi de l'état du bouton Menu VR pour détecter un appui unique
     private bool menuButtonPressedLastFrame = false;
 
     void Start()
@@ -23,8 +25,9 @@ public class PauseMenuUI : MonoBehaviour
 
         GameStateManager.Instance.OnStateChanged += HandleStateChange;
 
-        // Le menu pause est caché au départ
-        gameObject.SetActive(false);
+        // Cacher le panel visuel au départ, mais CE script reste actif
+        if (pausePanel != null)
+            pausePanel.SetActive(false);
     }
 
     void OnDestroy()
@@ -33,9 +36,10 @@ public class PauseMenuUI : MonoBehaviour
             GameStateManager.Instance.OnStateChanged -= HandleStateChange;
     }
 
+    // Update() tourne toujours car ce GameObject reste actif
     void Update()
     {
-        // PC : touche Échap (utile pour tester en éditeur)
+        // PC : touche Échap
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             TogglePause();
@@ -43,7 +47,6 @@ public class PauseMenuUI : MonoBehaviour
         }
 
         // VR Quest 3 : bouton Menu du contrôleur gauche
-        // On utilise les noms complets pour éviter les conflits de namespace
         var leftControllers = new List<UnityEngine.XR.InputDevice>();
         UnityEngine.XR.InputDevices.GetDevicesAtXRNode(UnityEngine.XR.XRNode.LeftHand, leftControllers);
 
@@ -52,7 +55,6 @@ public class PauseMenuUI : MonoBehaviour
             bool menuPressed = false;
             leftControllers[0].TryGetFeatureValue(UnityEngine.XR.CommonUsages.menuButton, out menuPressed);
 
-            // On déclenche seulement au moment où le bouton est pressé (front montant)
             if (menuPressed && !menuButtonPressedLastFrame)
                 TogglePause();
 
@@ -70,21 +72,12 @@ public class PauseMenuUI : MonoBehaviour
 
     private void HandleStateChange(GameStateManager.GameState newState)
     {
-        gameObject.SetActive(newState == GameStateManager.GameState.Paused);
+        // On affiche/cache le panel, pas le GameObject de ce script
+        if (pausePanel != null)
+            pausePanel.SetActive(newState == GameStateManager.GameState.Paused);
     }
 
-    private void OnResumeClicked()
-    {
-        GameStateManager.Instance.ResumeGame();
-    }
-
-    private void OnMainMenuClicked()
-    {
-        GameStateManager.Instance.ReturnToMainMenu();
-    }
-
-    private void OnQuitClicked()
-    {
-        GameStateManager.Instance.QuitGame();
-    }
+    private void OnResumeClicked()  { GameStateManager.Instance.ResumeGame(); }
+    private void OnMainMenuClicked(){ GameStateManager.Instance.ReturnToMainMenu(); }
+    private void OnQuitClicked()    { GameStateManager.Instance.QuitGame(); }
 }
