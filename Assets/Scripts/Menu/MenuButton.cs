@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class MenuButton : MonoBehaviour
 {
@@ -8,8 +9,8 @@ public class MenuButton : MonoBehaviour
 	[SerializeField] Animator animator;
 	[SerializeField] AnimatorFunctions animatorFunctions;
 	[SerializeField] int thisIndex;
+	[SerializeField] UnityEvent onPress;
 
-    // Update is called once per frame
     void Update()
     {
 		if(menuButtonController.index == thisIndex)
@@ -20,6 +21,7 @@ public class MenuButton : MonoBehaviour
 			}else if (animator.GetBool ("pressed")){
 				animator.SetBool ("pressed", false);
 				animatorFunctions.disableOnce = true;
+				onPress.Invoke();
 			}
 		}else{
 			animator.SetBool ("selected", false);
