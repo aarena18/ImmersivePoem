@@ -5,7 +5,7 @@ public class MainMenuActions : MonoBehaviour
 {
     public void CommencerPartie()
     {
-        SceneManager.LoadScene("scene");
+        SceneManager.LoadScene("PoemScene");
     }
 
     public void Parametres()
