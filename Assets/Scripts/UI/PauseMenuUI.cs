@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
@@ -10,6 +11,9 @@ public class PauseMenuUI : MonoBehaviour
     [SerializeField] private Button resumeButton;
     [SerializeField] private Button mainMenuButton;
     [SerializeField] private Button quitButton;
+
+    // Suivi de l'état du bouton Menu VR pour détecter un appui unique
+    private bool menuButtonPressedLastFrame = false;
 
     void Start()
     {
@@ -31,15 +35,37 @@ public class PauseMenuUI : MonoBehaviour
 
     void Update()
     {
-        // Appuyer sur Échap bascule pause / reprise
-        // Keyboard.current est la nouvelle API Input System d'Unity
+        // PC : touche Échap (utile pour tester en éditeur)
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
-            if (GameStateManager.Instance.CurrentState == GameStateManager.GameState.Playing)
-                GameStateManager.Instance.PauseGame();
-            else if (GameStateManager.Instance.CurrentState == GameStateManager.GameState.Paused)
-                GameStateManager.Instance.ResumeGame();
+            TogglePause();
+            return;
         }
+
+        // VR Quest 3 : bouton Menu du contrôleur gauche
+        // On utilise les noms complets pour éviter les conflits de namespace
+        var leftControllers = new List<UnityEngine.XR.InputDevice>();
+        UnityEngine.XR.InputDevices.GetDevicesAtXRNode(UnityEngine.XR.XRNode.LeftHand, leftControllers);
+
+        if (leftControllers.Count > 0)
+        {
+            bool menuPressed = false;
+            leftControllers[0].TryGetFeatureValue(UnityEngine.XR.CommonUsages.menuButton, out menuPressed);
+
+            // On déclenche seulement au moment où le bouton est pressé (front montant)
+            if (menuPressed && !menuButtonPressedLastFrame)
+                TogglePause();
+
+            menuButtonPressedLastFrame = menuPressed;
+        }
+    }
+
+    private void TogglePause()
+    {
+        if (GameStateManager.Instance.CurrentState == GameStateManager.GameState.Playing)
+            GameStateManager.Instance.PauseGame();
+        else if (GameStateManager.Instance.CurrentState == GameStateManager.GameState.Paused)
+            GameStateManager.Instance.ResumeGame();
     }
 
     private void HandleStateChange(GameStateManager.GameState newState)
