@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
 
-// Ce script doit être sur un GameObject TOUJOURS ACTIF (ex: un parent du Canvas pause).
+// Ce script doit être sur un GameObject TOUJOURS ACTIF (PauseMenuController).
 // Assigner le Canvas/Panel visuel dans pausePanel — c'est lui qui sera affiché/caché.
 public class PauseMenuUI : MonoBehaviour
 {
@@ -19,15 +19,27 @@ public class PauseMenuUI : MonoBehaviour
 
     void Start()
     {
-        resumeButton.onClick.AddListener(OnResumeClicked);
-        mainMenuButton.onClick.AddListener(OnMainMenuClicked);
-        quitButton.onClick.AddListener(OnQuitClicked);
-
-        GameStateManager.Instance.OnStateChanged += HandleStateChange;
-
-        // Cacher le panel visuel au départ, mais CE script reste actif
+        // Cacher le panel dès le départ
         if (pausePanel != null)
             pausePanel.SetActive(false);
+
+        // Vérification sécurisée avant de s'abonner
+        if (GameStateManager.Instance != null)
+        {
+            resumeButton.onClick.AddListener(OnResumeClicked);
+            mainMenuButton.onClick.AddListener(OnMainMenuClicked);
+            quitButton.onClick.AddListener(OnQuitClicked);
+            GameStateManager.Instance.OnStateChanged += HandleStateChange;
+
+            // Si on arrive dans la scène en état Playing, on s'assure que le panel est caché
+            if (GameStateManager.Instance.CurrentState != GameStateManager.GameState.Paused)
+                if (pausePanel != null) pausePanel.SetActive(false);
+        }
+        else
+        {
+            Debug.LogWarning("PauseMenuUI : GameStateManager introuvable. " +
+                             "Ajoute-le à la PoemScene ou lance depuis MainMenu.");
+        }
     }
 
     void OnDestroy()
@@ -36,9 +48,10 @@ public class PauseMenuUI : MonoBehaviour
             GameStateManager.Instance.OnStateChanged -= HandleStateChange;
     }
 
-    // Update() tourne toujours car ce GameObject reste actif
     void Update()
     {
+        if (GameStateManager.Instance == null) return;
+
         // PC : touche Échap
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
@@ -72,7 +85,6 @@ public class PauseMenuUI : MonoBehaviour
 
     private void HandleStateChange(GameStateManager.GameState newState)
     {
-        // On affiche/cache le panel, pas le GameObject de ce script
         if (pausePanel != null)
             pausePanel.SetActive(newState == GameStateManager.GameState.Paused);
     }
