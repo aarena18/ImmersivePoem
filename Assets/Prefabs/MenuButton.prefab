@@ -58,7 +58,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -66,11 +66,11 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 12800000, guid: 379faef6a95aa440781f3873babe4887, type: 3}
-    m_FontSize: 140
+    m_Font: {fileID: 12800000, guid: 8fd24b217b01b443f9724ff9a980f8dd, type: 3}
+    m_FontSize: 100
     m_FontStyle: 0
     m_BestFit: 0
-    m_MinSize: 10
+    m_MinSize: 1
     m_MaxSize: 234
     m_Alignment: 4
     m_AlignByGeometry: 0
@@ -144,6 +144,9 @@ MonoBehaviour:
   animator: {fileID: 1120576109}
   animatorFunctions: {fileID: 1088965559617320634}
   thisIndex: 0
+  onPress:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!95 &1120576109
 Animator:
   serializedVersion: 7
