@@ -182,10 +182,7 @@ PrefabInstance:
       insertIndex: 0
       addedObject: {fileID: 1170861875}
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: bf885d128519b4607a143d171c3abed2, type: 3}
-      insertIndex: 1
-      addedObject: {fileID: 277736117}
-    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: bf885d128519b4607a143d171c3abed2, type: 3}
-      insertIndex: 31
+      insertIndex: 30
       addedObject: {fileID: 1502897733}
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: bf885d128519b4607a143d171c3abed2, type: 3}
       insertIndex: -1
@@ -251,11 +248,11 @@ Transform:
   m_GameObject: {fileID: 277736116}
   serializedVersion: 2
   m_LocalRotation: {x: -0.033074874, y: -0.0015025701, z: 0.00004972457, w: -0.9994518}
-  m_LocalPosition: {x: -0.20999908, y: 1.25, z: 1.0500002}
+  m_LocalPosition: {x: -23.769999, y: 1.25, z: -10.45806}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 190304623}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 3.791, y: -359.828, z: 0}
 --- !u!114 &277736118
 MonoBehaviour:
@@ -1211,29 +1208,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0e499d888586c46f28dcd48077a2fb31, type: 3}
       insertIndex: -1
       addedObject: {fileID: 906346223}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0e499d888586c46f28dcd48077a2fb31, type: 3}
+    - targetCorrespondingSourceObject: {fileID: 5133285017217139023, guid: 0e499d888586c46f28dcd48077a2fb31, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 906346222}
+      addedObject: {fileID: 1904068340}
   m_SourcePrefab: {fileID: 100100000, guid: 0e499d888586c46f28dcd48077a2fb31, type: 3}
 --- !u!1 &906346221 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 0e499d888586c46f28dcd48077a2fb31, type: 3}
   m_PrefabInstance: {fileID: 906346220}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &906346222
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 906346221}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ad09a1f40f612454eb2d0d49a43d15ac, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LegoBatmanInteraction
-  toggleMode: 1
-  playerCamera: {fileID: 277736120}
 --- !u!65 &906346223
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2888,11 +2871,31 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!1 &1904068338 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5133285017217139023, guid: 0e499d888586c46f28dcd48077a2fb31, type: 3}
+  m_PrefabInstance: {fileID: 906346220}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1904068340
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1904068338}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad09a1f40f612454eb2d0d49a43d15ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LegoBatmanInteraction
+  toggleMode: 1
+  playerCamera: {fileID: 277736120}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 804764718}
   - {fileID: 1534067194}
+  - {fileID: 277736117}
   - {fileID: 190304622}
   - {fileID: 906346220}
