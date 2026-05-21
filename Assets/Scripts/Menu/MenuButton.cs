@@ -13,6 +13,9 @@ public class MenuButton : MonoBehaviour
 
     void Update()
     {
+		// Si pas de MenuButtonController assigné, ce bouton est géré autrement (ex: pause menu)
+		if(menuButtonController == null) return;
+
 		if(menuButtonController.index == thisIndex)
 		{
 			animator.SetBool ("selected", true);

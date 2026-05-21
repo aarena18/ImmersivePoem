@@ -47,7 +47,7 @@ public class GameStateManager : MonoBehaviour
     {
         SetState(GameState.Playing);
         // Remplacez "GameScene" par le nom réel de votre scène de jeu si différent.
-        SceneManager.LoadScene("SampleScene");
+        SceneManager.LoadScene("PoemScene");
     }
 
     public void PauseGame()
