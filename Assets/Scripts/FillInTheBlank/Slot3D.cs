@@ -12,6 +12,25 @@ public class Slot3D : MonoBehaviour
     public AudioClip sonVictoire;
     public AudioClip sonErreur;
 
+    private HoverOutlineHighlight highlight;
+
+    void Start()
+    {
+        highlight = GetComponent<HoverOutlineHighlight>();
+
+        if (highlight == null)
+            highlight = gameObject.AddComponent<HoverOutlineHighlight>();
+
+        highlight.Configure(new Color(0.2f, 0.95f, 1f, 1f), 1.03f);
+        highlight.SetHighlighted(false);
+    }
+
+    public void SetHighlighted(bool highlighted)
+    {
+        if (highlight != null)
+            highlight.SetHighlighted(highlighted);
+    }
+
     public void VerifierReponse(DragObjet3D objetGlisse)
     {
         if (objetGlisse.wordValue == motAttendu) Reussite(objetGlisse);

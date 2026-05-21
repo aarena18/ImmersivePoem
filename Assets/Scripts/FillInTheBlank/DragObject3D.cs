@@ -1,80 +1,221 @@
 using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.XR.Interaction.Toolkit.Interactables;
+using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
+[RequireComponent(typeof(XRGrabInteractable))]
 public class DragObjet3D : MonoBehaviour
 {
-    public string wordValue; 
-    
-    [Tooltip("Cocher pour débloquer l'objet après le poème")]
-    public bool peutEtreSaisi = false; 
+    public string wordValue;
 
-    [HideInInspector] public Vector3 positionAvantClic; 
-    
-    private float zDistanceToCamera;
-    private Rigidbody rb; 
-    private Collider monCollider; // On stocke le collider de l'objet
+    [Tooltip("Cocher pour débloquer l'objet après le poème")]
+    public bool peutEtreSaisi = false;
+
+    [HideInInspector] public Vector3 positionAvantClic;
+
+    private Rigidbody rb;
+    private Collider monCollider;
+    private HoverOutlineHighlight highlight;
+    private Slot3D slotSurvole;
+
+    private XRGrabInteractable grabInteractable;
+    private bool estSaisi = false;
+    private Transform sourceDuRay;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         monCollider = GetComponent<Collider>();
+
+        highlight = GetComponent<HoverOutlineHighlight>();
+        if (highlight == null)
+            highlight = gameObject.AddComponent<HoverOutlineHighlight>();
+
+        highlight.Configure(new Color(1f, 0.85f, 0.2f, 1f), 1.05f);
+        highlight.SetHighlighted(false);
+
+        grabInteractable = GetComponent<XRGrabInteractable>();
+        grabInteractable.trackPosition = true;
+        grabInteractable.trackRotation = false;
+        grabInteractable.movementType = XRBaseInteractable.MovementType.Kinematic;
+
+        grabInteractable.hoverEntered.AddListener(SurvolVR_Debut);
+        grabInteractable.hoverExited.AddListener(SurvolVR_Fin);
+        grabInteractable.selectEntered.AddListener(SaisieVR_Debut);
+        grabInteractable.selectExited.AddListener(SaisieVR_Fin);
     }
 
-    void OnMouseDown()
+    void Update()
     {
-        if (peutEtreSaisi == false) return; 
+        // Active / désactive la saisie
+        grabInteractable.interactionLayers =
+            peutEtreSaisi ? InteractionLayerMask.GetMask("Default") : 0;
 
-        positionAvantClic = transform.position; 
-        if (rb != null) rb.isKinematic = true; 
+        grabInteractable.trackRotation = false;
 
-        zDistanceToCamera = Camera.main.WorldToScreenPoint(transform.position).z;
-    }
-
-    void OnMouseDrag()
-    {
-        if (peutEtreSaisi == false) return; 
-
-        Vector3 positionSourisEcran = new Vector3(Input.mousePosition.x, Input.mousePosition.y, zDistanceToCamera);
-        transform.position = Camera.main.ScreenToWorldPoint(positionSourisEcran);
-    }
-
-    // ON A SUPPRIMÉ ONTRIGGERENTER ET EXIT ICI !
-
-    void OnMouseUp()
-    {
-        if (peutEtreSaisi == false) return;
-
-        // 1. On désactive temporairement le collider de cet objet 
-        // pour que le "laser" ne tape pas dessus par erreur
-        if (monCollider != null) monCollider.enabled = false;
-
-        // 2. On tire un rayon depuis la position de la souris
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        RaycastHit hit;
-
-        // 3. Si le rayon touche quelque chose en 3D
-        if (Physics.Raycast(ray, out hit))
+        if (estSaisi)
         {
-            // Est-ce que ce qu'il touche est un trou ?
-            if (hit.collider.CompareTag("ZoneDrop"))
+            MettreAJourZoneSurvoleeVR();
+        }
+    }
+
+    // =========================
+    // EVENTS VR
+    // =========================
+
+    private void SurvolVR_Debut(HoverEnterEventArgs args)
+    {
+        if (peutEtreSaisi && highlight != null)
+            highlight.SetHighlighted(true);
+    }
+
+    private void SurvolVR_Fin(HoverExitEventArgs args)
+    {
+        if (highlight != null)
+            highlight.SetHighlighted(false);
+    }
+
+private void SaisieVR_Debut(SelectEnterEventArgs args)
+{
+        if (!peutEtreSaisi) return;
+
+        positionAvantClic = transform.position;
+        estSaisi = true;
+        sourceDuRay = args.interactorObject != null ? args.interactorObject.transform : null;
+
+        if (monCollider != null)
+            monCollider.enabled = false;
+
+        if (rb != null)
+            rb.isKinematic = true;
+}
+
+    private void SaisieVR_Fin(SelectExitEventArgs args)
+    {
+        if (!peutEtreSaisi) return;
+
+        estSaisi = false;
+
+        if (highlight != null)
+            highlight.SetHighlighted(false);
+
+        VerifierDepotVR();
+
+        SetZoneSurvolee(null);
+        sourceDuRay = null;
+
+        if (monCollider != null)
+            monCollider.enabled = true;
+
+        if (rb != null)
+            rb.isKinematic = false;
+    }
+
+    // =========================
+    // VR DROP LOGIC (RAYCAST)
+    // =========================
+
+    private void MettreAJourZoneSurvoleeVR()
+    {
+        if (sourceDuRay == null)
+        {
+            SetZoneSurvolee(null);
+            return;
+        }
+
+        SetZoneSurvolee(TrouverZoneSousRayon());
+    }
+
+    private void SetZoneSurvolee(Slot3D nouvelleZone)
+    {
+        if (slotSurvole == nouvelleZone) return;
+
+        if (slotSurvole != null)
+            slotSurvole.SetHighlighted(false);
+
+        slotSurvole = nouvelleZone;
+
+        if (slotSurvole != null)
+            slotSurvole.SetHighlighted(true);
+    }
+
+    private Slot3D TrouverZoneDrop(Collider collider)
+    {
+        if (collider == null) return null;
+
+        if (collider.CompareTag("ZoneDrop"))
+            return collider.GetComponent<Slot3D>();
+
+        return collider.GetComponentInParent<Slot3D>();
+    }
+
+    private Slot3D TrouverZoneSousRayon()
+    {
+        if (sourceDuRay == null) return null;
+
+        Ray ray = new Ray(sourceDuRay.position, sourceDuRay.forward);
+        RaycastHit[] hits = Physics.RaycastAll(ray, 50f);
+        Slot3D meilleureZone = null;
+        float meilleureDistance = float.MaxValue;
+
+        for (int i = 0; i < hits.Length; i++)
+        {
+            RaycastHit hit = hits[i];
+
+            if (hit.collider == null) continue;
+            if (hit.collider == monCollider) continue;
+            if (!hit.collider.CompareTag("ZoneDrop")) continue;
+            if (hit.distance >= meilleureDistance) continue;
+
+            Slot3D zone = TrouverZoneDrop(hit.collider);
+
+            if (zone != null)
             {
-                Slot3D zoneTouchee = hit.collider.GetComponent<Slot3D>();
-                if (zoneTouchee != null)
-                {
-                    zoneTouchee.VerifierReponse(this); // On vérifie la réponse !
-                    if (monCollider != null) monCollider.enabled = true; // On réactive
-                    return; // On arrête la fonction ici, c'est un succès (ou une erreur gérée)
-                }
+                meilleureZone = zone;
+                meilleureDistance = hit.distance;
             }
         }
 
-        // 4. Si on arrive ici, c'est qu'on a cliqué dans le vide ou à côté
-        if (monCollider != null) monCollider.enabled = true; // On réactive
-        RetourAuSol(); 
+        return meilleureZone;
+    }
+
+    private void VerifierDepotVR()
+    {
+        if (slotSurvole != null)
+        {
+            slotSurvole.VerifierReponse(this);
+            return;
+        }
+
+        if (sourceDuRay != null)
+        {
+            Slot3D zone = TrouverZoneSousRayon();
+
+            if (zone != null)
+            {
+                zone.VerifierReponse(this);
+                return;
+            }
+        }
+
+        RetourAuSol();
     }
 
     public void RetourAuSol()
     {
         transform.position = positionAvantClic;
-        if (rb != null) rb.isKinematic = false; 
+
+        if (rb != null)
+            rb.isKinematic = false;
+    }
+
+    void OnDestroy()
+    {
+        if (grabInteractable == null) return;
+
+        grabInteractable.hoverEntered.RemoveListener(SurvolVR_Debut);
+        grabInteractable.hoverExited.RemoveListener(SurvolVR_Fin);
+        grabInteractable.selectEntered.RemoveListener(SaisieVR_Debut);
+        grabInteractable.selectExited.RemoveListener(SaisieVR_Fin);
     }
 }
