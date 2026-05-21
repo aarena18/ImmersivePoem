@@ -15,7 +15,7 @@ EditorBuildSettings:
     path: Assets/Scenes/MainMenu.unity
     guid: 61b1d2809a5904501bd088f4d86e6b71
   - enabled: 1
-    path: Assets/Scenes/PoemScene.unity
+    path: Assets/Scenes/PoemScene2.unity
     guid: c2440fab8c28a0c42b812690c5f4b36b
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
