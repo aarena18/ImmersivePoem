@@ -10,15 +10,29 @@ public class LegoBatmanInteraction : MonoBehaviour
     [Tooltip("Si coché, un second clic revient à la voix féminine.")]
     [SerializeField] private bool toggleMode = true;
 
+    [Tooltip("Glisse ici ta caméra Player depuis la Hierarchy.")]
+    [SerializeField] private Camera playerCamera;
+
     private bool rightTriggerWasPressed = false;
     private bool leftTriggerWasPressed  = false;
 
-    // --- Éditeur / PC : clic souris ---
-    private void OnMouseDown() => SwitchVoice();
+    void Start()
+    {
+        if (playerCamera == null)
+            playerCamera = Camera.main;
+    }
 
-    // --- VR : détection du trigger contrôleur + raycast ---
     void Update()
     {
+        // --- Éditeur / PC : détection par position écran (compatible caméra VR) ---
+        if (Input.GetMouseButtonDown(0) && playerCamera != null)
+        {
+            Vector3 screenPos = playerCamera.WorldToScreenPoint(transform.position);
+            if (screenPos.z > 0 && Vector2.Distance(Input.mousePosition, new Vector2(screenPos.x, screenPos.y)) < 150f)
+                SwitchVoice();
+        }
+
+        // --- VR : détection du trigger contrôleur + raycast ---
         CheckControllerTrigger(XRNode.RightHand, ref rightTriggerWasPressed);
         CheckControllerTrigger(XRNode.LeftHand,  ref leftTriggerWasPressed);
     }
@@ -53,7 +67,11 @@ public class LegoBatmanInteraction : MonoBehaviour
 
     private void SwitchVoice()
     {
-        if (MenuSoundManager.Instance == null) return;
+        if (MenuSoundManager.Instance == null)
+        {
+            Debug.LogWarning("[Batman] MenuSoundManager introuvable dans la scène !");
+            return;
+        }
 
         if (toggleMode)
         {
