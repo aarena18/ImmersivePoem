@@ -19,8 +19,10 @@ public class DragObjet3D : MonoBehaviour
     private Slot3D slotSurvole;
 
     private XRGrabInteractable grabInteractable;
-    private bool estSaisi = false;
+    private bool estSaisi       = false;
+    private bool estSaisiSouris = false;
     private Transform sourceDuRay;
+    private Camera mainCam;
 
     void Start()
     {
@@ -33,6 +35,9 @@ public class DragObjet3D : MonoBehaviour
 
         highlight.Configure(new Color(1f, 0.85f, 0.2f, 1f), 1.05f);
         highlight.SetHighlighted(false);
+
+        mainCam = Camera.main;
+        if (mainCam == null) mainCam = FindFirstObjectByType<Camera>();
 
         grabInteractable = GetComponent<XRGrabInteractable>();
         grabInteractable.trackPosition = true;
@@ -53,9 +58,29 @@ public class DragObjet3D : MonoBehaviour
 
         grabInteractable.trackRotation = false;
 
-        if (estSaisi)
+        if (estSaisi) MettreAJourZoneSurvoleeVR();
+
+        // ---- Fallback souris (éditeur / simulateur) ----
+        if (!peutEtreSaisi) return;
+
+        if (Input.GetMouseButtonDown(0) && !estSaisi)
+            TenterSaisieSouris();
+
+        if (estSaisiSouris)
         {
-            MettreAJourZoneSurvoleeVR();
+            if (Input.GetMouseButton(0))
+                DeplacerAvecSouris();
+            else
+                RelacherSouris();
+        }
+
+        // Hover souris → highlight
+        if (!estSaisiSouris && mainCam != null)
+        {
+            Ray r = mainCam.ScreenPointToRay(Input.mousePosition);
+            bool survole = Physics.Raycast(r, out RaycastHit h, 100f)
+                           && (h.transform == transform || h.transform.IsChildOf(transform));
+            if (highlight != null) highlight.SetHighlighted(survole);
         }
     }
 
@@ -75,8 +100,8 @@ public class DragObjet3D : MonoBehaviour
             highlight.SetHighlighted(false);
     }
 
-private void SaisieVR_Debut(SelectEnterEventArgs args)
-{
+    private void SaisieVR_Debut(SelectEnterEventArgs args)
+    {
         if (!peutEtreSaisi) return;
 
         positionAvantClic = transform.position;
@@ -88,7 +113,7 @@ private void SaisieVR_Debut(SelectEnterEventArgs args)
 
         if (rb != null)
             rb.isKinematic = true;
-}
+    }
 
     private void SaisieVR_Fin(SelectExitEventArgs args)
     {
@@ -207,6 +232,67 @@ private void SaisieVR_Debut(SelectEnterEventArgs args)
 
         if (rb != null)
             rb.isKinematic = false;
+    }
+
+    // =========================
+    // FALLBACK SOURIS
+    // =========================
+
+    private void TenterSaisieSouris()
+    {
+        if (mainCam == null) return;
+        Ray ray = mainCam.ScreenPointToRay(Input.mousePosition);
+        if (Physics.Raycast(ray, out RaycastHit hit, 100f)
+            && (hit.transform == transform || hit.transform.IsChildOf(transform)))
+        {
+            positionAvantClic = transform.position;
+            estSaisiSouris = true;
+            if (rb != null) rb.isKinematic = true;
+            if (highlight != null) highlight.SetHighlighted(true);
+        }
+    }
+
+    private void DeplacerAvecSouris()
+    {
+        if (mainCam == null) return;
+        Ray ray = mainCam.ScreenPointToRay(Input.mousePosition);
+        Plane plan = new Plane(-mainCam.transform.forward, transform.position);
+        if (plan.Raycast(ray, out float dist))
+            transform.position = ray.GetPoint(dist);
+
+        SetZoneSurvolee(TrouverSlotSousSouris());
+    }
+
+    private void RelacherSouris()
+    {
+        estSaisiSouris = false;
+        if (highlight != null) highlight.SetHighlighted(false);
+
+        if (slotSurvole != null)
+            slotSurvole.VerifierReponse(this);
+        else
+            RetourAuSol();
+
+        SetZoneSurvolee(null);
+        if (rb != null) rb.isKinematic = false;
+    }
+
+    private Slot3D TrouverSlotSousSouris()
+    {
+        if (mainCam == null) return null;
+        Ray ray = mainCam.ScreenPointToRay(Input.mousePosition);
+        RaycastHit[] hits = Physics.RaycastAll(ray, 100f);
+        Slot3D meilleur = null;
+        float dist = float.MaxValue;
+        foreach (var hit in hits)
+        {
+            if (hit.collider == monCollider) continue;
+            if (!hit.collider.CompareTag("ZoneDrop")) continue;
+            if (hit.distance >= dist) continue;
+            Slot3D z = TrouverZoneDrop(hit.collider);
+            if (z != null) { meilleur = z; dist = hit.distance; }
+        }
+        return meilleur;
     }
 
     void OnDestroy()
