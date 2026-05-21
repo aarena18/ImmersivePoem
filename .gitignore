@@ -154,3 +154,5 @@ ExportedObj/
 # OS generated
 .DS_Store
 Thumbs.db
+# Vidéos lourdes (> 100MB)
+*.mov
