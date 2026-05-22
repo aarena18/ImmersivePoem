@@ -20,6 +20,13 @@ public class TulipFieldGenerator : MonoBehaviour
     [Tooltip("Le temps qu'il faut à une seule tulipe pour atteindre sa taille finale.")]
     public float timeToGrow = 2f;
 
+    [Header("Ancrage au sol")]
+    [Tooltip("Hauteur au-dessus du point de spawn utilisée pour lancer le rayon vers le sol.")]
+    public float groundCheckHeight = 100f;
+
+    [Tooltip("Distance maximale du rayon vers le bas pour trouver le sol.")]
+    public float groundCheckDistance = 250f;
+
     [Header("Variations Visuelles")]
     public float minScale = 0.8f;
     public float maxScale = 1.2f;
@@ -90,11 +97,18 @@ public class TulipFieldGenerator : MonoBehaviour
         Vector2 randomCircle = Random.insideUnitCircle * spawnRadius;
         Vector3 spawnPosition = transform.position + new Vector3(randomCircle.x, 0, randomCircle.y);
 
-        // Optionnel mais recommandé : Faire un Raycast vers le bas pour coller la tulipe au sol (si le terrain n'est pas plat)
+        // On cherche le sol sous la position aléatoire pour éviter de faire pousser des tulipes dans le vide.
         RaycastHit hit;
-        if (Physics.Raycast(spawnPosition + Vector3.up * 5f, Vector3.down, out hit, 10f))
+        Vector3 rayOrigin = spawnPosition + Vector3.up * groundCheckHeight;
+
+        if (Physics.Raycast(rayOrigin, Vector3.down, out hit, groundCheckDistance, ~0, QueryTriggerInteraction.Ignore))
         {
-            spawnPosition.y = hit.point.y;
+            spawnPosition = hit.point;
+        }
+        else
+        {
+            Debug.LogWarning($"TulipFieldGenerator: aucun sol détecté sous {spawnPosition}. Tulipe ignorée pour éviter un spawn dans le vide.");
+            return;
         }
 
         // 2. Déterminer une rotation aléatoire (pour que les tulipes ne regardent pas toutes dans la même direction)
